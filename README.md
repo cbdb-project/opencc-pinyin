@@ -2,8 +2,8 @@
 
 通過 [OpenCC](https://github.com/BYVoid/OpenCC) 的匹配機制，將繁體及簡體中文漢字轉換為漢語拼音。
 
-拼音數據來源：[mozillazg/pinyin-data](https://github.com/mozillazg/pinyin-data/blob/master/zdic.txt)（抓取自漢典網 zdic.net）。  
-多音字會保留 `zdic.txt` 原始讀音順序，並寫成 OpenCC 的多值格式（空格分隔）。  
+拼音數據來源：[mozillazg/pinyin-data](https://github.com/mozillazg/pinyin-data/blob/master/zdic.txt)（抓取自漢典網 zdic.net），放在 `third_party/pinyin-data/`，並保留其上游授權文件。
+多音字會保留 `third_party/pinyin-data/zdic.txt` 原始讀音順序，並寫成 OpenCC 的多值格式（空格分隔）。
 例如：`U+548C: hé,hè,huó,huò,hú` 會生成 `和\thé hè huó huò hú`，OpenCC 轉換時默認取第一個讀音。
 
 ---
@@ -16,8 +16,9 @@
 | `pinyin_notone.json` | OpenCC 轉換配置文件（輸出**無聲調**拼音） |
 | `pinyin.txt` | OpenCC 文本格式字典（每行：`漢字 TAB 拼音`） |
 | `tones.txt` | 聲調去除字典（帶調韻母 → 無調韻母，ü 保持不變） |
-| `zdic.txt` | 原始拼音數據，來自 mozillazg/pinyin-data |
-| `gen_dict.py` | 從 `zdic.txt` 生成 `pinyin.txt` 的腳本 |
+| `third_party/pinyin-data/zdic.txt` | 原始拼音數據，來自 mozillazg/pinyin-data |
+| `third_party/pinyin-data/LICENSE` | 上游 pinyin-data 的 MIT 授權文件 |
+| `gen_dict.py` | 從 `third_party/pinyin-data/zdic.txt` 生成 `pinyin.txt` 的腳本 |
 
 ---
 
@@ -73,9 +74,13 @@ opencc -c /path/to/opencc-pinyin/pinyin_notone.json -i input.txt -o output.txt
 
 ```sh
 # 1. 下載最新的 zdic.txt
-curl -fsSL https://raw.githubusercontent.com/mozillazg/pinyin-data/master/zdic.txt -o zdic.txt
+mkdir -p third_party/pinyin-data
+curl -fsSL https://raw.githubusercontent.com/mozillazg/pinyin-data/master/zdic.txt -o third_party/pinyin-data/zdic.txt
 
-# 2. 生成字典
+# 2. 下載或更新上游授權文件
+curl -fsSL https://raw.githubusercontent.com/mozillazg/pinyin-data/master/LICENSE -o third_party/pinyin-data/LICENSE
+
+# 3. 生成字典
 python3 gen_dict.py
 ```
 

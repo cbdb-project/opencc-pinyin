@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Generate an OpenCC-format pinyin dictionary (pinyin.txt) from zdic.txt.
+Generate an OpenCC-format pinyin dictionary (pinyin.txt) from the bundled
+third-party pinyin-data zdic.txt.
 
 Source data: https://github.com/mozillazg/pinyin-data/blob/master/zdic.txt
 
@@ -10,8 +11,8 @@ joined by spaces.
 Usage:
     python gen_dict.py [zdic.txt] [pinyin.txt]
 
-If no arguments are given, reads from zdic.txt and writes to pinyin.txt in the
-current directory.
+If no arguments are given, reads from third_party/pinyin-data/zdic.txt and
+writes to pinyin.txt in the current directory.
 """
 
 import re
@@ -20,6 +21,7 @@ from pathlib import Path
 
 # Pattern: U+XXXX: pinyin1,pinyin2,...  # character
 _LINE_RE = re.compile(r'^U\+([0-9A-Fa-f]+):\s+(\S+)\s+#')
+DEFAULT_ZDIC_PATH = Path('third_party/pinyin-data/zdic.txt')
 
 
 def parse_zdic(content: str) -> list[tuple[str, str]]:
@@ -56,15 +58,17 @@ def write_opencc_dict(entries: list[tuple[str, str]], output_path: Path) -> None
 
 def main() -> None:
     args = sys.argv[1:]
-    zdic_path = Path(args[0]) if len(args) >= 1 else Path('zdic.txt')
+    zdic_path = Path(args[0]) if len(args) >= 1 else DEFAULT_ZDIC_PATH
     out_path = Path(args[1]) if len(args) >= 2 else Path('pinyin.txt')
 
     if not zdic_path.exists():
         print(
             f'Error: {zdic_path} not found.\n'
             'Download it with:\n'
+            '  mkdir -p third_party/pinyin-data\n'
             '  curl -fsSL https://raw.githubusercontent.com/mozillazg/'
-            'pinyin-data/master/zdic.txt -o zdic.txt',
+            'pinyin-data/master/zdic.txt '
+            '-o third_party/pinyin-data/zdic.txt',
             file=sys.stderr,
         )
         sys.exit(1)
