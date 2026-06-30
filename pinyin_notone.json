@@ -1,5 +1,13 @@
 {
   "name": "Chinese to Pinyin without tones (漢字轉無聲調拼音)",
+  "normalization": [
+    {
+      "dict": {
+        "type": "text",
+        "file": "third_party/OpenCC/CJK_Compatibility_Ideographs.txt"
+      }
+    }
+  ],
   "conversion_chain": [
     {
       "dict": {

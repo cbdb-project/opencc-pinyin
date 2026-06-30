@@ -5,9 +5,11 @@
 This repository provides OpenCC text dictionaries and configurations for converting Chinese characters to Hanyu Pinyin.
 
 - `pinyin.json` converts Chinese characters to pinyin with tone marks.
-- `pinyin_notone.json` runs a two-step OpenCC conversion: first `pinyin.txt`, then `tones.txt` to remove tone marks.
+- `pinyin_notone.json` runs OpenCC conversion with CJK compatibility normalization, then `pinyin.txt`, then `tones.txt` to remove tone marks.
 - `third_party/pinyin-data/zdic.txt` is the upstream source data from `mozillazg/pinyin-data`, scraped from zdic.net.
 - `third_party/pinyin-data/LICENSE` is the upstream pinyin-data MIT license.
+- `third_party/OpenCC/CJK_Compatibility_Ideographs.txt` is vendored from OpenCC and is used as the CJK Compatibility Ideograph normalization pre-pass.
+- `third_party/OpenCC/LICENSE` is the upstream OpenCC Apache-2.0 license.
 - `gen_dict.py` generates `pinyin.txt` from `third_party/pinyin-data/zdic.txt`.
 - `tones.txt` maps tone-marked pinyin letters to their no-tone forms. Keep `ü` as `ü`; do not normalize it to `u`.
 
@@ -20,7 +22,8 @@ The canonical data flow is:
 1. Edit or update `third_party/pinyin-data/zdic.txt`.
 2. Run `python3 gen_dict.py` to regenerate `pinyin.txt`.
 3. Keep `tones.txt` complete for every tone-marked/non-base pinyin letter that appears in `pinyin.txt`.
-4. Use OpenCC's dictionary sort tool for OpenCC text dictionaries.
+4. Keep `pinyin.json` and `pinyin_notone.json` wired to the OpenCC CJK compatibility normalization dictionary.
+5. Use OpenCC's dictionary sort tool for OpenCC text dictionaries.
 
 Do not hand-edit `pinyin.txt` for source-data changes unless there is a narrow, intentional reason. Prefer changing `third_party/pinyin-data/zdic.txt` and regenerating.
 
@@ -29,6 +32,7 @@ Do not hand-edit `pinyin.txt` for source-data changes unless there is a narrow, 
 - `third_party/pinyin-data/zdic.txt` lines use `U+XXXX: reading1,reading2  # character`; lines beginning with `# U+...` are placeholders for characters without pinyin.
 - `pinyin.txt` lines are `character<TAB>pinyin`, with multiple readings separated by spaces.
 - `tones.txt` lines are `marked-letter<TAB>base-letter`.
+- `third_party/OpenCC/CJK_Compatibility_Ideographs.txt` lines are `compatibility-character<TAB>unified-character`; preserve the upstream OpenCC comments and Apache-2.0 license notice.
 - Preserve tabs in dictionary files. Do not replace dictionary separators with spaces.
 - Preserve comment alignment in `third_party/pinyin-data/zdic.txt` when moving lines; do not reformat entries unless the task explicitly asks for it.
 
@@ -45,6 +49,23 @@ python3 ../OpenCC/data/scripts/sort.py tones.txt tones.txt
 ```
 
 `pinyin.txt` must still match `gen_dict.py` output after sorting. If sorting changes generated order, understand why before committing.
+
+## Normalization Config
+
+Both OpenCC configs must keep the same CJK Compatibility Ideograph normalization pre-pass:
+
+```json
+"normalization": [
+  {
+    "dict": {
+      "type": "text",
+      "file": "third_party/OpenCC/CJK_Compatibility_Ideographs.txt"
+    }
+  }
+]
+```
+
+This mirrors OpenCC's built-in configs and normalizes compatibility ideographs before pinyin lookup or tone removal. Keep this top-level `normalization` field, and do not repeat the same CJK dictionary in `conversion_chain`. Do not add `segmentation` for these configs; pinyin conversion is character-level and does not need an mmseg pass.
 
 ## Tone Removal Coverage
 
@@ -125,6 +146,7 @@ PY
 ## Commit Guidance
 
 - Keep commits focused. Source changes in `third_party/pinyin-data/zdic.txt`, regenerated `pinyin.txt`, and related `tones.txt` fixes can be committed together when they are part of the same data maintenance task.
+- Keep vendored third-party data and its license together under `third_party/<project>/`.
 - Mention whether `pinyin.txt` was regenerated.
 - If using commit-message rules from a sibling OpenCC checkout, follow `../OpenCC/AGENTS.md`.
 - Do not include editor swap files such as `.zdic.txt.swp` or `.AGENTS.md.swp`.

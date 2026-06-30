@@ -18,6 +18,8 @@
 | `tones.txt` | 聲調去除字典（帶調韻母 → 無調韻母，ü 保持不變） |
 | `third_party/pinyin-data/zdic.txt` | 原始拼音數據，來自 mozillazg/pinyin-data |
 | `third_party/pinyin-data/LICENSE` | 上游 pinyin-data 的 MIT 授權文件 |
+| `third_party/OpenCC/CJK_Compatibility_Ideographs.txt` | CJK 兼容表意文字正規化字典，來自 OpenCC |
+| `third_party/OpenCC/LICENSE` | 上游 OpenCC 的 Apache License 2.0 授權文件 |
 | `gen_dict.py` | 從 `third_party/pinyin-data/zdic.txt` 生成 `pinyin.txt` 的腳本 |
 
 ---
@@ -94,10 +96,11 @@ python3 gen_dict.py [zdic.txt 路徑] [輸出字典路徑]
 
 ## 算法說明
 
-本項目利用 OpenCC 的**最長匹配**（Longest Match）字典查找機制，以兩步管道實現帶調或無調拼音輸出：
+本項目利用 OpenCC 的**最長匹配**（Longest Match）字典查找機制，以正規化前處理和字典管道實現帶調或無調拼音輸出：
 
-1. **第一步**（`pinyin.txt`）：OpenCC 從左到右掃描輸入文本，將漢字替換為對應拼音（帶聲調）。對於多音字，字典值會保留多個讀音（空格分隔），而 OpenCC 轉換時默認使用第一個讀音。未匹配的字符（英文、數字、標點等）原樣保留。
-2. **第二步**（`tones.txt`，僅 `pinyin_notone.json`）：將帶調韻母替換為無調形式（ā→a、ǎ→a … ǖ/ǘ/ǚ/ǜ→ü）。ü 不會被替換為 u。
+1. **正規化前處理**（`third_party/OpenCC/CJK_Compatibility_Ideographs.txt`）：先將 CJK 兼容表意文字映射到 UnicodeData 對應的統一表意文字，例如兼容字形會先歸一化，再進入拼音字典查找。
+2. **拼音轉換**（`pinyin.txt`）：OpenCC 從左到右掃描輸入文本，將漢字替換為對應拼音（帶聲調）。對於多音字，字典值會保留多個讀音（空格分隔），而 OpenCC 轉換時默認使用第一個讀音。未匹配的字符（英文、數字、標點等）原樣保留。
+3. **去聲調轉換**（`tones.txt`，僅 `pinyin_notone.json`）：將帶調韻母替換為無調形式（ā→a、ǎ→a … ǖ/ǘ/ǚ/ǜ→ü）。ü 不會被替換為 u。
 
 字典涵蓋以下 Unicode 範圍：
 
