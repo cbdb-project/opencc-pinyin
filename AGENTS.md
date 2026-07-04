@@ -8,6 +8,8 @@ This repository provides OpenCC text dictionaries and configurations for convert
 - `pinyin_notone.json` runs OpenCC conversion with CJK compatibility normalization, then `pinyin.txt`, then `tone_removal.txt` to remove tone marks.
 - `third_party/pinyin-data/zdic.txt` is the upstream source data from `mozillazg/pinyin-data`, scraped from zdic.net.
 - `third_party/pinyin-data/LICENSE` is the upstream pinyin-data MIT license.
+- `third_party/phrase-pinyin-data/large_pinyin.txt` is the upstream merged phrase-pinyin data from `mozillazg/phrase-pinyin-data`. It is currently vendored as source material for future polyphonic phrase filtering and is not wired into the OpenCC configs.
+- `third_party/phrase-pinyin-data/LICENSE` is the upstream phrase-pinyin-data MIT license.
 - `third_party/OpenCC/CJK_Compatibility_Ideographs.txt` is vendored from OpenCC and is used as the CJK Compatibility Ideograph normalization pre-pass.
 - `third_party/OpenCC/LICENSE` is the upstream OpenCC Apache-2.0 license.
 - `gen_dict.py` generates `pinyin.txt` from `third_party/pinyin-data/zdic.txt`.
@@ -23,7 +25,8 @@ The canonical data flow is:
 2. Run `python3 gen_dict.py` to regenerate `pinyin.txt`.
 3. Keep `tone_removal.txt` complete for every tone-marked/non-base pinyin letter that appears in `pinyin.txt`.
 4. Keep `pinyin.json` and `pinyin_notone.json` wired to the OpenCC CJK compatibility normalization dictionary.
-5. Use OpenCC's dictionary sort tool for OpenCC text dictionaries.
+5. Keep `third_party/phrase-pinyin-data/large_pinyin.txt` as upstream source material until a filtered polyphonic phrase dictionary is generated from it.
+6. Use OpenCC's dictionary sort tool for OpenCC text dictionaries.
 
 Do not hand-edit `pinyin.txt` for source-data changes unless there is a narrow, intentional reason. Prefer changing `third_party/pinyin-data/zdic.txt` and regenerating.
 
@@ -33,6 +36,7 @@ Do not hand-edit `pinyin.txt` for source-data changes unless there is a narrow, 
 - `pinyin.txt` lines are `character<TAB>pinyin`, with multiple readings separated by spaces.
 - `tone_removal.txt` lines are `marked-letter<TAB>base-letter`.
 - `third_party/OpenCC/CJK_Compatibility_Ideographs.txt` lines are `compatibility-character<TAB>unified-character`; preserve the upstream OpenCC comments and Apache-2.0 license notice.
+- `third_party/phrase-pinyin-data/large_pinyin.txt` lines are `phrase: syllable1 syllable2 ...`; lines beginning with `#` are upstream metadata or comments. Preserve the upstream file as vendored source data unless intentionally updating it from upstream.
 - Preserve tabs in dictionary files. Do not replace dictionary separators with spaces.
 - Preserve comment alignment in `third_party/pinyin-data/zdic.txt` when moving lines; do not reformat entries unless the task explicitly asks for it.
 

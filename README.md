@@ -3,6 +3,7 @@
 通過 [OpenCC](https://github.com/BYVoid/OpenCC) 的匹配機制，將繁體及簡體中文漢字轉換為漢語拼音。
 
 拼音數據來源：[mozillazg/pinyin-data](https://github.com/mozillazg/pinyin-data/blob/master/zdic.txt)（抓取自漢典網 zdic.net），放在 `third_party/pinyin-data/`，並保留其上游授權文件。
+詞語拼音數據來源：[mozillazg/phrase-pinyin-data](https://github.com/mozillazg/phrase-pinyin-data)，放在 `third_party/phrase-pinyin-data/`，並保留其上游授權文件；目前僅作為後續多音字短語過濾的原始資料，尚未接入 OpenCC 配置。
 多音字會保留 `third_party/pinyin-data/zdic.txt` 原始讀音順序，並寫成 OpenCC 的多值格式（空格分隔）。
 例如：`U+548C: hé,hè,huó,huò,hú` 會生成 `和\thé hè huó huò hú`，OpenCC 轉換時默認取第一個讀音。
 
@@ -18,6 +19,8 @@
 | `tone_removal.txt` | 聲調去除字典（帶調韻母 → 無調韻母，ü 保持不變） |
 | `third_party/pinyin-data/zdic.txt` | 原始拼音數據，來自 mozillazg/pinyin-data |
 | `third_party/pinyin-data/LICENSE` | 上游 pinyin-data 的 MIT 授權文件 |
+| `third_party/phrase-pinyin-data/large_pinyin.txt` | 上游詞語拼音合併產物，來自 mozillazg/phrase-pinyin-data，後續用於多音字短語過濾 |
+| `third_party/phrase-pinyin-data/LICENSE` | 上游 phrase-pinyin-data 的 MIT 授權文件 |
 | `third_party/OpenCC/CJK_Compatibility_Ideographs.txt` | CJK 兼容表意文字正規化字典，來自 OpenCC |
 | `third_party/OpenCC/LICENSE` | 上游 OpenCC 的 Apache License 2.0 授權文件 |
 | `gen_dict.py` | 從 `third_party/pinyin-data/zdic.txt` 生成 `pinyin.txt` 的腳本 |
@@ -90,6 +93,14 @@ python3 gen_dict.py
 
 ```sh
 python3 gen_dict.py [zdic.txt 路徑] [輸出字典路徑]
+```
+
+若需更新詞語拼音原始資料：
+
+```sh
+mkdir -p third_party/phrase-pinyin-data
+curl -fsSL https://raw.githubusercontent.com/mozillazg/phrase-pinyin-data/master/large_pinyin.txt -o third_party/phrase-pinyin-data/large_pinyin.txt
+curl -fsSL https://raw.githubusercontent.com/mozillazg/phrase-pinyin-data/master/LICENSE -o third_party/phrase-pinyin-data/LICENSE
 ```
 
 ---
