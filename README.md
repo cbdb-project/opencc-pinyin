@@ -6,6 +6,7 @@
 詞語拼音數據來源：[mozillazg/phrase-pinyin-data](https://github.com/mozillazg/phrase-pinyin-data)，放在 `third_party/phrase-pinyin-data/`，並保留其上游授權文件；目前僅作為後續多音字短語過濾的原始資料，尚未接入 OpenCC 配置。
 多音字會保留 `third_party/pinyin-data/zdic.txt` 原始讀音順序，並寫成 OpenCC 的多值格式（空格分隔）。
 例如：`U+548C: hé,hè,huó,huò,hú` 會生成 `和\thé hè huó huò hú`，OpenCC 轉換時默認取第一個讀音。
+`phrase_pinyin.txt` 是從上游詞語拼音中過濾出的多音字短語詞典；目前尚未接入 `pinyin.json` 或 `pinyin_notone.json`。
 
 ---
 
@@ -16,6 +17,7 @@
 | `pinyin.json` | OpenCC 轉換配置文件（輸出**帶聲調**拼音） |
 | `pinyin_notone.json` | OpenCC 轉換配置文件（輸出**無聲調**拼音） |
 | `pinyin.txt` | OpenCC 文本格式字典（每行：`漢字 TAB 拼音`） |
+| `phrase_pinyin.txt` | OpenCC 文本格式短語拼音字典，僅包含涉及多音字的多字詞語 |
 | `tone_removal.txt` | 聲調去除字典（帶調韻母 → 無調韻母，ü 保持不變） |
 | `third_party/pinyin-data/zdic.txt` | 原始拼音數據，來自 mozillazg/pinyin-data |
 | `third_party/pinyin-data/LICENSE` | 上游 pinyin-data 的 MIT 授權文件 |
@@ -24,6 +26,7 @@
 | `third_party/OpenCC/CJK_Compatibility_Ideographs.txt` | CJK 兼容表意文字正規化字典，來自 OpenCC |
 | `third_party/OpenCC/LICENSE` | 上游 OpenCC 的 Apache License 2.0 授權文件 |
 | `gen_dict.py` | 從 `third_party/pinyin-data/zdic.txt` 生成 `pinyin.txt` 的腳本 |
+| `gen_phrase_dict.py` | 從 `third_party/phrase-pinyin-data/large_pinyin.txt` 生成 `phrase_pinyin.txt` 的腳本 |
 
 ---
 
@@ -103,6 +106,15 @@ curl -fsSL https://raw.githubusercontent.com/mozillazg/phrase-pinyin-data/master
 curl -fsSL https://raw.githubusercontent.com/mozillazg/phrase-pinyin-data/master/LICENSE -o third_party/phrase-pinyin-data/LICENSE
 ```
 
+若需重新生成多音字短語詞典：
+
+```sh
+python3 gen_phrase_dict.py
+python3 ../OpenCC/data/scripts/sort.py phrase_pinyin.txt phrase_pinyin.txt
+```
+
+上游詞語拼音使用空格分隔每個漢字的音節，例如 `重庆: chóng qìng`。OpenCC 文本字典中的空格表示多個候選值，因此 `gen_phrase_dict.py` 會把單條讀音內部的音節空格去掉，輸出為 `重庆\tchóngqìng`。如果同一詞語有多個讀音，則保留為 OpenCC 多值格式，例如 `朝阳\tzhāoyáng cháoyáng`。
+
 ---
 
 ## 算法說明
@@ -112,6 +124,8 @@ curl -fsSL https://raw.githubusercontent.com/mozillazg/phrase-pinyin-data/master
 1. **正規化前處理**（`third_party/OpenCC/CJK_Compatibility_Ideographs.txt`）：先將 CJK 兼容表意文字映射到 UnicodeData 對應的統一表意文字，例如兼容字形會先歸一化，再進入拼音字典查找。
 2. **拼音轉換**（`pinyin.txt`）：OpenCC 從左到右掃描輸入文本，將漢字替換為對應拼音（帶聲調）。對於多音字，字典值會保留多個讀音（空格分隔），而 OpenCC 轉換時默認使用第一個讀音。未匹配的字符（英文、數字、標點等）原樣保留。
 3. **去聲調轉換**（`tone_removal.txt`，僅 `pinyin_notone.json`）：將帶調韻母替換為無調形式（ā→a、ǎ→a … ǖ/ǘ/ǚ/ǜ→ü）。ü 不會被替換為 u。
+
+`phrase_pinyin.txt` 尚未加入轉換鏈。若後續接入，應放在 `pinyin.txt` 之前，利用 OpenCC 最長匹配讓詞語讀音覆蓋單字多音字默認讀音。
 
 字典涵蓋以下 Unicode 範圍：
 

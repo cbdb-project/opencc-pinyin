@@ -13,6 +13,8 @@ This repository provides OpenCC text dictionaries and configurations for convert
 - `third_party/OpenCC/CJK_Compatibility_Ideographs.txt` is vendored from OpenCC and is used as the CJK Compatibility Ideograph normalization pre-pass.
 - `third_party/OpenCC/LICENSE` is the upstream OpenCC Apache-2.0 license.
 - `gen_dict.py` generates `pinyin.txt` from `third_party/pinyin-data/zdic.txt`.
+- `gen_phrase_dict.py` generates `phrase_pinyin.txt` from `third_party/phrase-pinyin-data/large_pinyin.txt`, keeping only multi-character phrases that contain at least one polyphonic character from `pinyin.txt`.
+- `phrase_pinyin.txt` is an OpenCC phrase dictionary source for future polyphonic phrase overrides. It is not wired into `pinyin.json` or `pinyin_notone.json` yet.
 - `tone_removal.txt` maps tone-marked pinyin letters to their no-tone forms. Keep `ü` as `ü`; do not normalize it to `u`.
 
 This is a character-level dictionary. It does not segment words or disambiguate polyphonic characters by context. For polyphonic entries, preserve the reading order from `third_party/pinyin-data/zdic.txt`; OpenCC will use the first candidate by default.
@@ -25,8 +27,9 @@ The canonical data flow is:
 2. Run `python3 gen_dict.py` to regenerate `pinyin.txt`.
 3. Keep `tone_removal.txt` complete for every tone-marked/non-base pinyin letter that appears in `pinyin.txt`.
 4. Keep `pinyin.json` and `pinyin_notone.json` wired to the OpenCC CJK compatibility normalization dictionary.
-5. Keep `third_party/phrase-pinyin-data/large_pinyin.txt` as upstream source material until a filtered polyphonic phrase dictionary is generated from it.
-6. Use OpenCC's dictionary sort tool for OpenCC text dictionaries.
+5. Run `python3 gen_phrase_dict.py` to regenerate `phrase_pinyin.txt` from `third_party/phrase-pinyin-data/large_pinyin.txt`.
+6. Keep `third_party/phrase-pinyin-data/large_pinyin.txt` as upstream source material.
+7. Use OpenCC's dictionary sort tool for OpenCC text dictionaries.
 
 Do not hand-edit `pinyin.txt` for source-data changes unless there is a narrow, intentional reason. Prefer changing `third_party/pinyin-data/zdic.txt` and regenerating.
 
@@ -34,6 +37,7 @@ Do not hand-edit `pinyin.txt` for source-data changes unless there is a narrow, 
 
 - `third_party/pinyin-data/zdic.txt` lines use `U+XXXX: reading1,reading2  # character`; lines beginning with `# U+...` are placeholders for characters without pinyin.
 - `pinyin.txt` lines are `character<TAB>pinyin`, with multiple readings separated by spaces.
+- `phrase_pinyin.txt` lines are `phrase<TAB>pinyin`, with multiple full-phrase readings separated by spaces. Do not keep syllable spaces inside one phrase reading; OpenCC treats spaces as candidate separators.
 - `tone_removal.txt` lines are `marked-letter<TAB>base-letter`.
 - `third_party/OpenCC/CJK_Compatibility_Ideographs.txt` lines are `compatibility-character<TAB>unified-character`; preserve the upstream OpenCC comments and Apache-2.0 license notice.
 - `third_party/phrase-pinyin-data/large_pinyin.txt` lines are `phrase: syllable1 syllable2 ...`; lines beginning with `#` are upstream metadata or comments. Preserve the upstream file as vendored source data unless intentionally updating it from upstream.
@@ -49,10 +53,12 @@ Do not hand-edit `pinyin.txt` for source-data changes unless there is a narrow, 
 
 ```sh
 python3 ../OpenCC/data/scripts/sort.py pinyin.txt pinyin.txt
+python3 ../OpenCC/data/scripts/sort.py phrase_pinyin.txt phrase_pinyin.txt
 python3 ../OpenCC/data/scripts/sort.py tone_removal.txt tone_removal.txt
 ```
 
 `pinyin.txt` must still match `gen_dict.py` output after sorting. If sorting changes generated order, understand why before committing.
+For `phrase_pinyin.txt`, generate a temporary output, sort that temporary output with OpenCC's sort tool, then compare it with the checked-in file.
 
 ## Normalization Config
 
