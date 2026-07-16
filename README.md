@@ -43,6 +43,8 @@ PinyinData::setOverrides(['重' => 'chóng']);
 PinyinData::lookup('重');              // "chóng"（未覆蓋時為 "zhòng"）
 ```
 
+`setOverrides()` 為**整體替換**而非合併：每次調用會丟棄上一份覆蓋表，傳 `[]` 即清除。
+
 ---
 
 ## 文件說明
